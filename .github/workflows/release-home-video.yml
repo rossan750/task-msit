@@ -1,4 +1,4 @@
-name: release
+name: release-home-video
 
 on:
   push:
