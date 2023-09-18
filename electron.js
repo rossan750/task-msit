@@ -41,7 +41,9 @@ function createWindow () {
       icon: './favicon.ico',
       webPreferences: {
         nodeIntegration: true,
-        webSecurity: false
+        webSecurity: false,
+        contextIsolation: false,
+        enableRemoteModule: true
       }
     })
   } else {
@@ -51,6 +53,8 @@ function createWindow () {
       frame: !HIDE_FRAME_ELECTRON,
       webPreferences: {
         nodeIntegration: true,
+        contextIsolation: false,
+        enableRemoteModule: true,
         webSecurity: true
       }
     })
