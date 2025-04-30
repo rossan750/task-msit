@@ -20,7 +20,6 @@ jobs:
         video: [on, off]
         os: [ubuntu-latest, macOS-latest, windows-latest]
         exclude:
-          # exclude clinic video on ubuntu-latest
           - os: ubuntu-latest
             setting: clinic
             video: on
@@ -48,37 +47,52 @@ jobs:
           - os: windows-latest
             setting: pdonly
             video: on
+      fail-fast: false
 
     steps:
-      # Rewrite "git:" repo urls to use "https:" instead, since GitHub Actions blocks port 9418 (as of Jan 2022).
+      # Rewrite "git:" repo urls to use "https:" instead
       - name: Rewrite "git:" repo urls to use "https:" instead.
         run: git config --global url."https://github.com/".insteadOf "git://github.com/"
-        
-      # Set up js package
-      - uses: actions/checkout@v1
-      - name: Use Node.js
-        uses: actions/setup-node@v1
+
+      # Set up Python
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: 🅿️ Install Python tools
+        run: pip install setuptools
+
+      # Set up Node.js
+      - uses: actions/checkout@v4
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v4
         with:
           node-version: 16.x
+          cache: npm
 
-      # install, test, build package
+      # Install dependencies
       - name: npm install
         run: |
           npm config set "//npm.pkg.github.com/:_authToken" ${{ secrets.GITHUB_TOKEN }}
-          npm install
-      - name: Load .env file
-        uses: xom9ikk/dotenv@v1.0.2
+          npm ci
+
+      # Load environment
+      - name: 🔃 Load .env file (.env.${{matrix.setting}})
+        uses: xom9ikk/dotenv@v2
         with:
           path: ./env
           mode: ${{matrix.setting}}
-      - name: Load .env file for video
-        if: matrix.video=='on'
-        uses: xom9ikk/dotenv@v1.0.2
-        with:
-          path: ./env
-          mode: video
-      - name: npm build
+
+      # Lint the code
+      - name: 🔬 Lint
+        run: npm run lint -- --max-warnings=0
+
+      # Build the app
+      - name: ⚒ Build
         run: npm run build
+
+      # Run tests
       - name: npm test
         run: npm test
         env:
